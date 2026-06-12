@@ -414,8 +414,11 @@ RequestExecutionLevel user ; will ask elevation only if necessary
 		!insertmacro UAC_AsUser_Call Label get_user_values ${UAC_SYNCREGISTERS}
 		Goto set_user_vars
 		get_user_values:
-		ReadRegStr $R0 HKCU "${MULTIUSER_INSTALLMODE_INSTALL_REGISTRY_KEY_PATH}" "${MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME}" ; "InstallLocation"
 		!insertmacro MULTIUSER_GetCurrentUserString $0
+		ReadRegStr $R0 HKCU "${MULTIUSER_INSTALLMODE_INSTALL_REGISTRY_KEY_PATH}$0" "${MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME}" ; "InstallLocation"
+		${if} $R0 == ""
+				ReadRegStr $R0 HKCU "${MULTIUSER_INSTALLMODE_INSTALL_REGISTRY_KEY_PATH}" "${MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME}" ; "InstallLocation"
+		${endif}
 		ReadRegStr $R1 HKCU "${MULTIUSER_INSTALLMODE_UNINSTALL_REGISTRY_KEY_PATH}$0" "DisplayVersion"
 		ReadRegStr $R2 HKCU "${MULTIUSER_INSTALLMODE_UNINSTALL_REGISTRY_KEY_PATH}$0" "UninstallString" ; contains the /currentuser or /allusers parameter
 		${if} $R0 == ""
@@ -1079,14 +1082,14 @@ RequestExecutionLevel user ; will ask elevation only if necessary
 	Push $3
 	Push $4
 
-	; Write the installation path into the registry
-	WriteRegStr SHCTX "${MULTIUSER_INSTALLMODE_INSTALL_REGISTRY_KEY_PATH}" "${MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME}" "$INSTDIR" ; "InstallLocation"
-
 	; Write the uninstall keys for Windows
 	; Workaround for Windows issue: if the uninstall key names are the same in HKLM and HKCU, Windows displays only one entry in the add/remove programs dialog;
 	; this will create 2 different keys in HKCU (MULTIUSER_INSTALLMODE_INSTALL_REGISTRY_KEY_PATH and MULTIUSER_INSTALLMODE_UNINSTALL_REGISTRY_KEY_PATH),
 	; but that's OK, both will be removed by uninstaller
 	!insertmacro MULTIUSER_GetCurrentUserString $0
+
+	; Write the installation path into the registry
+	WriteRegStr SHCTX "${MULTIUSER_INSTALLMODE_INSTALL_REGISTRY_KEY_PATH}$0" "${MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME}" "$INSTDIR" ; "InstallLocation"
 
 	${if} $MultiUser.InstallMode == "AllUsers" ; setting defaults
 		WriteRegStr SHCTX "${MULTIUSER_INSTALLMODE_UNINSTALL_REGISTRY_KEY_PATH}" "DisplayName" "${MULTIUSER_INSTALLMODE_DISPLAYNAME}"
