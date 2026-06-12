@@ -324,13 +324,15 @@ Function PageStartMenuPre
 FunctionEnd
 
 Function PageFinishRun
-	; the installer might exit too soon before the application starts and it loses the right to be the foreground window and starts in the background
-	; however, if there's no active window when the application starts, it will become the active window, so we hide the installer
-	HideWindow
-	; the installer will show itself again quickly before closing (w/o Taskbar button), we move it offscreen
-	!define SWP_NOSIZE 0x0001
-	!define SWP_NOZORDER 0x0004
-	System::Call "User32::SetWindowPos(i, i, i, i, i, i, i) b ($HWNDPARENT, 0, -1000, -1000, 0, 0, ${SWP_NOZORDER}|${SWP_NOSIZE})"
+	${if} ${UAC_IsInnerInstance}
+		; the installer might exit too soon before the application starts and it loses the right to be the foreground window and starts in the background
+		; however, if there's no active window when the application starts, it will become the active window, so we hide the installer
+		HideWindow
+		; the installer will show itself again quickly before closing (w/o Taskbar button), we move it offscreen
+		!define SWP_NOSIZE 0x0001
+		!define SWP_NOZORDER 0x0004
+		System::Call "User32::SetWindowPos(i, i, i, i, i, i, i) b ($HWNDPARENT, 0, -1000, -1000, 0, 0, ${SWP_NOZORDER}|${SWP_NOSIZE})"
+	${endif}
 
 	!insertmacro UAC_AsUser_ExecShell "open" "$INSTDIR\${PROGEXE}" "" "$INSTDIR" ""
 FunctionEnd
